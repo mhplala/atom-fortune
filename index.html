@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>今日运势 · 抽签</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f0e8;
+    --ink: #2c2c2c;
+    --red: #c4463a;
+    --gold: #b8860b;
+    --paper: #faf6ef;
+  }
+
+  body {
+    font-family: 'Noto Serif SC', serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+    padding-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-height: 100dvh;
+  }
+
+  /* 签筒 */
+  .tube-scene {
+    perspective: 800px;
+    margin-bottom: 20px;
+    margin-top: 30px;
+  }
+
+  .tube {
+    width: 120px;
+    height: 200px;
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 30%, #D2691E 50%, #A0522D 70%, #8B4513 100%);
+    border-radius: 12px 12px 20px 20px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.5s, opacity 0.5s;
+    box-shadow: 4px 8px 20px rgba(0,0,0,0.3), inset 0 -4px 8px rgba(0,0,0,0.2);
+  }
+
+  .tube::before {
+    content: '籤';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    color: var(--gold);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+
+  .tube::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 16px;
+    background: linear-gradient(135deg, #654321, #8B4513, #654321);
+    border-radius: 8px 8px 4px 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .sticks {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 60px;
+  }
+
+  .stick {
+    position: absolute;
+    width: 4px;
+    height: 50px;
+    background: linear-gradient(to bottom, #daa520, #f5deb3, #daa520);
+    border-radius: 2px;
+    bottom: 0;
+    transform-origin: bottom center;
+  }
+
+  .stick:nth-child(1) { left: 20px; transform: rotate(-15deg); }
+  .stick:nth-child(2) { left: 30px; transform: rotate(-5deg); }
+  .stick:nth-child(3) { left: 40px; transform: rotate(3deg); }
+  .stick:nth-child(4) { left: 50px; transform: rotate(10deg); }
+  .stick:nth-child(5) { left: 35px; transform: rotate(-8deg); }
+
+  .tube.shaking { animation: tubeShake 0.1s infinite alternate; }
+  .tube.shaking .stick { animation: stickShake 0.15s infinite alternate; }
+
+  @keyframes tubeShake {
+    0% { transform: rotate(-3deg) translateX(-3px); }
+    100% { transform: rotate(3deg) translateX(3px); }
+  }
+  @keyframes stickShake {
+    0% { transform: rotate(var(--r, -15deg)) translateX(-4px); }
+    100% { transform: rotate(var(--r, -15deg)) translateX(4px); }
+  }
+
+  .tube-hint {
+    font-size: 14px;
+    color: #999;
+    margin-top: 12px;
+    text-align: center;
+    transition: opacity 0.3s;
+    line-height: 1.6;
+  }
+
+  .tube-hint .shake-icon {
+    display: inline-block;
+    animation: hintPulse 2s ease-in-out infinite;
+    font-size: 20px;
+  }
+
+  @keyframes hintPulse {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-15deg); }
+    75% { transform: rotate(15deg); }
+  }
+
+  /* 签纸 */
+  .fortune-card {
+    width: 100%;
+    max-width: 340px;
+    background: var(--paper);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+    transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 2px 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  .fortune-card.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .card-border {
+    border: 2px solid var(--red);
+    margin: 8px;
+    padding: 24px 16px;
+    position: relative;
+  }
+
+  .card-border::before, .card-border::after {
+    content: '◆';
+    position: absolute;
+    color: var(--red);
+    font-size: 10px;
+  }
+  .card-border::before { top: -7px; left: -7px; }
+  .card-border::after { bottom: -7px; right: -7px; }
+
+  .fortune-rank {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .fortune-rank .label {
+    font-size: 13px;
+    color: #888;
+    letter-spacing: 4px;
+  }
+
+  .fortune-rank .rank {
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--red);
+    line-height: 1.2;
+    letter-spacing: 8px;
+  }
+
+  .fortune-divider {
+    width: 60px;
+    height: 1px;
+    background: var(--red);
+    margin: 16px auto;
+    opacity: 0.4;
+  }
+
+  .fortune-poem {
+    text-align: center;
+    font-size: 16px;
+    line-height: 2;
+    color: var(--ink);
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+  }
+
+  .fortune-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    margin-top: 16px;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    padding: 6px 0;
+    border-bottom: 1px dashed #e0d8cc;
+  }
+
+  .detail-item .dt-label {
+    color: #888;
+    min-width: 42px;
+    flex-shrink: 0;
+  }
+
+  .detail-item .dt-value {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* 注意事项区域 */
+  .fortune-notes {
+    margin-top: 20px;
+    padding: 14px;
+    background: rgba(196, 70, 58, 0.04);
+    border-radius: 4px;
+    border-left: 3px solid var(--red);
+  }
+
+  .fortune-notes .notes-title {
+    font-size: 12px;
+    color: var(--red);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  .fortune-notes .note-item {
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #555;
+    padding: 3px 0;
+    display: flex;
+    gap: 6px;
+  }
+
+  .fortune-notes .note-item .note-tag {
+    color: var(--red);
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+
+  .fortune-advice {
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(184, 134, 11, 0.06);
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #666;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .fortune-number {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 11px;
+    color: #bbb;
+    letter-spacing: 2px;
+  }
+
+  /* 重抽按钮 */
+  .retry-btn {
+    margin-top: 24px;
+    margin-bottom: 60px;
+    padding: 10px 28px;
+    background: none;
+    border: 1px solid var(--red);
+    color: var(--red);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s;
+    letter-spacing: 4px;
+  }
+
+  .retry-btn.show { opacity: 1; }
+  .retry-btn:active { background: var(--red); color: white; }
+
+  .date-display {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    font-size: 12px;
+    color: #aaa;
+    writing-mode: vertical-rl;
+    letter-spacing: 2px;
+  }
+
+  .watermark {
+    position: fixed;
+    bottom: 12px;
+    font-size: 11px;
+    color: #ccc;
+    letter-spacing: 2px;
+  }
+
+  /* 权限提示 toast */
+  .motion-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: rgba(44,44,44,0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 999;
+    transition: transform 0.4s;
+    text-align: center;
+  }
+  .motion-toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="motion-toast" id="motionToast"></div>
+
+<div class="container">
+  <div class="date-display" id="dateDisplay"></div>
+
+  <div class="tube-scene">
+    <div class="tube" id="tube" onclick="shakeTube()">
+      <div class="sticks">
+        <div class="stick" style="--r:-15deg"></div>
+        <div class="stick" style="--r:-5deg"></div>
+        <div class="stick" style="--r:3deg"></div>
+        <div class="stick" style="--r:10deg"></div>
+        <div class="stick" style="--r:-8deg"></div>
+      </div>
+    </div>
+    <div class="tube-hint" id="tubeHint">
+      <span class="shake-icon">📱</span> 摇一摇手机 抽签<br>
+      <span style="font-size:12px;color:#bbb">或点击签筒</span>
+    </div>
+  </div>
+
+  <div class="fortune-card" id="fortuneCard">
+    <div class="card-border">
+      <div class="fortune-rank">
+        <div class="label">今 日 运 势</div>
+        <div class="rank" id="fortuneRank"></div>
+      </div>
+      <div class="fortune-divider"></div>
+      <div class="fortune-poem" id="fortunePoem"></div>
+      <div class="fortune-details" id="fortuneDetails"></div>
+      <div class="fortune-notes" id="fortuneNotes"></div>
+      <div class="fortune-advice" id="fortuneAdvice"></div>
+      <div class="fortune-number" id="fortuneNumber"></div>
+    </div>
+  </div>
+
+  <button class="retry-btn" id="retryBtn" onclick="reset()">再 抽 一 签</button>
+</div>
+
+<div class="watermark">Atom ⚛️ 出品</div>
+
+<script>
+const RANKS = [
+  { name: '大吉', weight: 12 },
+  { name: '中吉', weight: 18 },
+  { name: '小吉', weight: 22 },
+  { name: '吉', weight: 20 },
+  { name: '末吉', weight: 12 },
+  { name: '凶', weight: 10 },
+  { name: '小凶', weight: 4 },
+  { name: '大凶', weight: 2 },
+];
+
+const POEMS = [
+  { lines: ['春风得意马蹄疾', '一日看尽长安花'], source: '孟郊' },
+  { lines: ['山重水复疑无路', '柳暗花明又一村'], source: '陆游' },
+  { lines: ['长风破浪会有时', '直挂云帆济沧海'], source: '李白' },
+  { lines: ['莫愁前路无知己', '天下谁人不识君'], source: '高适' },
+  { lines: ['千磨万击还坚劲', '任尔东西南北风'], source: '郑燮' },
+  { lines: ['沉舟侧畔千帆过', '病树前头万木春'], source: '刘禹锡' },
+  { lines: ['不畏浮云遮望眼', '自缘身在最高层'], source: '王安石' },
+  { lines: ['人生到处知何似', '应似飞鸿踏雪泥'], source: '苏轼' },
+  { lines: ['行到水穷处', '坐看云起时'], source: '王维' },
+  { lines: ['竹杖芒鞋轻胜马', '一蓑烟雨任平生'], source: '苏轼' },
+  { lines: ['欲穷千里目', '更上一层楼'], source: '王之涣' },
+  { lines: ['天生我材必有用', '千金散尽还复来'], source: '李白' },
+  { lines: ['会当凌绝顶', '一览众山小'], source: '杜甫' },
+  { lines: ['海内存知己', '天涯若比邻'], source: '王勃' },
+  { lines: ['落红不是无情物', '化作春泥更护花'], source: '龚自珍' },
+  { lines: ['采菊东篱下', '悠然见南山'], source: '陶渊明' },
+  { lines: ['谁道人生无再少', '门前流水尚能西'], source: '苏轼' },
+  { lines: ['纸上得来终觉浅', '绝知此事要躬行'], source: '陆游' },
+  { lines: ['大鹏一日同风起', '扶摇直上九万里'], source: '李白' },
+  { lines: ['随风潜入夜', '润物细无声'], source: '杜甫' },
+];
+
+const ASPECTS = {
+  love: ['桃花朵朵', '宜静观', '有惊喜', '平淡是真', '小心误会', '暗流涌动', '甜蜜加倍', '旧人来访', '表白宜', '默契十足'],
+  work: ['贵人相助', '稳步推进', '灵感迸发', '宜蛰伏', '小有波折', '厚积薄发', '逢凶化吉', '大展宏图', '适合学习', '宜复盘'],
+  wealth: ['小有进账', '守财为上', '意外之财', '量入为出', '破财消灾', '稳中有升', '投资宜慎', '广进财源', '宜存钱', '有偏财'],
+  health: ['精力充沛', '注意休息', '宜户外', '早睡早起', '多喝热水', '舒展筋骨', '心情舒畅', '忌辛辣', '宜泡澡', '适合跑步'],
+  lucky_color: ['珊瑚红', '雾霾蓝', '鹅黄', '薄荷绿', '烟灰紫', '奶油白', '焦糖棕', '天青色', '柿子橙', '松石绿'],
+  lucky_food: ['拿铁', '抹茶', '火锅', '寿司', '饺子', '奶茶', '烤红薯', '糖葫芦', '酸辣粉', '提拉米苏', '螺蛳粉', '热干面'],
+  lucky_num: ['3', '6', '7', '8', '9', '12', '16', '18', '21', '28', '33', '66', '88'],
+  lucky_dir: ['东', '南', '西', '北', '东南', '西南', '东北', '西北'],
+};
+
+// ===== 注意事项库 =====
+const NOTES = {
+  travel_good: [
+    '出行大吉，适合短途旅行或散步',
+    '宜出门，遇事逢凶化吉',
+    '适合探索新地方，惊喜在路上',
+    '出行顺利，带上好心情就够了',
+  ],
+  travel_mid: [
+    '出行平稳，注意随身物品',
+    '短途无碍，长途宜改期',
+    '外出带伞，天气可能有变',
+    '出行前再检查一遍证件和充电宝',
+  ],
+  travel_bad: [
+    '不宜远行，在家待着更安全',
+    '出门注意脚下，别看手机走路',
+    '避免赶时间，提前出发留余量',
+    '今天容易丢东西，贵重物品别离手',
+  ],
+  social_good: [
+    '适合社交，多说话多交流',
+    '老朋友联络一下，会有意想不到的收获',
+    '今天说话特别有说服力',
+    '宜聚餐，饭桌上有好消息',
+  ],
+  social_mid: [
+    '社交适度，留点时间给自己',
+    '群聊里少发言，容易被误解',
+    '有人找你帮忙，量力而行',
+    '多倾听少建议，今天当个好听众',
+  ],
+  social_bad: [
+    '少说话，祸从口出概率较高',
+    '避免争论，赢了道理输了关系',
+    '有人可能踩你雷点，深呼吸',
+    '不适合谈敏感话题，改天再说',
+  ],
+  money_good: [
+    '可以小小犒赏自己，花了不心疼',
+    '适合理财规划，头脑特别清醒',
+    '朋友请客的概率比平时高',
+    '适合处理账单、报销之类的琐事',
+  ],
+  money_mid: [
+    '消费前问自己：三天后还想要吗？',
+    '别点外卖了，自己做更省也更健康',
+    '有笔钱可能要出，提前做好心理准备',
+    '购物车里的东西再等等，可能会降价',
+  ],
+  money_bad: [
+    '管住手，今天冲动消费概率极高',
+    '别借钱给人，也别跟人借',
+    '检查一下自动续费，可能有冤枉钱',
+    '大额支出今天不做决定，缓一缓',
+  ],
+  life_good: [
+    '适合尝试新事物——新餐厅、新路线、新发型',
+    '今天拍照特别上镜',
+    '睡前写下三件感恩的事，好运会延续',
+    '适合给家里添点绿植或鲜花',
+  ],
+  life_mid: [
+    '整理一下桌面或衣柜，心情会跟着变好',
+    '今天适合早睡，别熬夜刷手机',
+    '吃点水果，身体会感谢你',
+    '听一首很久没听的老歌',
+  ],
+  life_bad: [
+    '多喝热水不是废话，今天真的需要',
+    '睡不着就别硬躺，起来看会书',
+    '别翻旧照片旧聊天记录，没好处',
+    '做一件简单的家务，找回掌控感',
+  ],
+};
+
+const ADVICES_GOOD = [
+  '今天适合大胆行动，犹豫的事就去做吧。好运眷顾勇敢的人。',
+  '有什么想说的话，今天说出来效果最好。你的表达力在线。',
+  '给自己买点好的，你值得。偶尔的奖赏是对努力的尊重。',
+  '今天的直觉很准，相信第一感觉。分析反而会把你带偏。',
+  '适合开始新计划，万事开头今天最佳。哪怕只是写下第一步。',
+  '出门走走，好运在路上等你。室内坐不住的话就听身体的。',
+  '今天做的决定大概率是对的，别犹豫太久。',
+];
+
+const ADVICES_MID = [
+  '稳扎稳打就好，不急于求成。龟兔赛跑的道理今天特别适用。',
+  '有些事顺其自然，强求不来。放下的瞬间反而会有转机。',
+  '今天适合整理——房间、思绪、或者手机相册。清理即是疗愈。',
+  '给重要的人发条消息，维系比开始更难。一句"在干嘛"就够了。',
+  '做一件让自己开心的小事。小确幸是对平凡日子的奖赏。',
+  '吃顿好的，很多烦恼其实是饿的。认真吃饭是最朴素的自爱。',
+  '今天不用太努力，保持节奏就好。不是每天都需要冲刺。',
+];
+
+const ADVICES_BAD = [
+  '不是坏运气，是在攒大招。蛰伏一下，明天换你发光。',
+  '今天少说多听，祸从口出不是迷信。沉默今天是金。',
+  '凶签反着读就是吉——至少今天已经最差了，明天只会更好。',
+  '避免冲动消费和冲动发言，深呼吸三次再行动。',
+  '宜静不宜动，看本书、追个剧，躲一天就过去了。',
+  '遇事缓一缓，睡一觉再决定。急中生错的概率今天翻倍。',
+  '把今天当作存档点，什么都不做也是一种智慧。',
+];
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function pickWeighted(rng, items) {
+  const total = items.reduce((s, i) => s + i.weight, 0);
+  let r = rng() * total;
+  for (const item of items) {
+    r -= item.weight;
+    if (r <= 0) return item;
+  }
+  return items[items.length - 1];
+}
+
+function pickRandom(rng, arr) {
+  return arr[Math.floor(rng() * arr.length)];
+}
+
+let shaking = false;
+let drawn = false;
+let motionEnabled = false;
+let shakeCount = 0;
+let lastShakeTime = 0;
+
+// ===== 摇一摇检测 =====
+function initMotion() {
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    // iOS 13+ 需要请求权限
+    document.getElementById('tube').addEventListener('click', function requestOnce() {
+      DeviceMotionEvent.requestPermission().then(state => {
+        if (state === 'granted') {
+          motionEnabled = true;
+          startMotionListener();
+          showToast('摇一摇已开启 📱');
+          // 请求完权限后触发抽签
+          shakeTube();
+        }
+      }).catch(console.error);
+      document.getElementById('tube').removeEventListener('click', requestOnce);
+    });
+  } else if (typeof DeviceMotionEvent !== 'undefined') {
+    // Android / 不需要权限的设备
+    motionEnabled = true;
+    startMotionListener();
+  }
+}
+
+function startMotionListener() {
+  let lastX = 0, lastY = 0, lastZ = 0;
+  const THRESHOLD = 20;
+
+  window.addEventListener('devicemotion', function(e) {
+    if (shaking || drawn) return;
+
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+
+    const dx = Math.abs(acc.x - lastX);
+    const dy = Math.abs(acc.y - lastY);
+    const dz = Math.abs(acc.z - lastZ);
+
+    lastX = acc.x; lastY = acc.y; lastZ = acc.z;
+
+    if (dx + dy + dz > THRESHOLD) {
+      const now = Date.now();
+      if (now - lastShakeTime > 300) {
+        shakeCount++;
+        lastShakeTime = now;
+
+        // 摇的过程中签筒也跟着晃
+        const tube = document.getElementById('tube');
+        if (!tube.classList.contains('shaking')) {
+          tube.classList.add('shaking');
+          if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        if (shakeCount >= 3) {
+          shakeCount = 0;
+          shakeTube();
+        }
+      }
+    }
+  }, { passive: true });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('motionToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function shakeTube() {
+  if (shaking || drawn) return;
+  shaking = true;
+
+  const tube = document.getElementById('tube');
+  const hint = document.getElementById('tubeHint');
+
+  tube.classList.add('shaking');
+  hint.style.opacity = '0';
+
+  if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 80, 30, 100]);
+
+  setTimeout(() => {
+    tube.classList.remove('shaking');
+    shaking = false;
+    drawn = true;
+    drawFortune();
+  }, 1800);
+}
+
+function drawFortune() {
+  const seed = Date.now() + Math.floor(Math.random() * 99999);
+  const rng = seededRandom(seed);
+
+  const rank = pickWeighted(rng, RANKS);
+  const poem = pickRandom(rng, POEMS);
+  const isGood = ['大吉', '中吉', '吉'].includes(rank.name);
+  const isBad = ['凶', '小凶', '大凶'].includes(rank.name);
+  const tier = isGood ? 'good' : (isBad ? 'bad' : 'mid');
+  const advicePool = isGood ? ADVICES_GOOD : (isBad ? ADVICES_BAD : ADVICES_MID);
+
+  const details = [
+    { label: '感情', value: pickRandom(rng, ASPECTS.love) },
+    { label: '事业', value: pickRandom(rng, ASPECTS.work) },
+    { label: '财运', value: pickRandom(rng, ASPECTS.wealth) },
+    { label: '健康', value: pickRandom(rng, ASPECTS.health) },
+    { label: '幸运色', value: pickRandom(rng, ASPECTS.lucky_color) },
+    { label: '幸运食', value: pickRandom(rng, ASPECTS.lucky_food) },
+    { label: '幸运数', value: pickRandom(rng, ASPECTS.lucky_num) },
+    { label: '吉方位', value: pickRandom(rng, ASPECTS.lucky_dir) },
+  ];
+
+  // 注意事项：每个类别抽一条
+  const notes = [
+    { tag: '出行', text: pickRandom(rng, NOTES['travel_' + tier]) },
+    { tag: '社交', text: pickRandom(rng, NOTES['social_' + tier]) },
+    { tag: '消费', text: pickRandom(rng, NOTES['money_' + tier]) },
+    { tag: '生活', text: pickRandom(rng, NOTES['life_' + tier]) },
+  ];
+
+  // 渲染
+  document.getElementById('fortuneRank').textContent = rank.name;
+  document.getElementById('fortunePoem').innerHTML =
+    poem.lines.map(l => `<div>${l}</div>`).join('') +
+    `<div style="font-size:11px;color:#aaa;margin-top:4px">— ${poem.source}</div>`;
+
+  document.getElementById('fortuneDetails').innerHTML =
+    details.map(d => `
+      <div class="detail-item">
+        <span class="dt-label">${d.label}</span>
+        <span class="dt-value">${d.value}</span>
+      </div>
+    `).join('');
+
+  document.getElementById('fortuneNotes').innerHTML =
+    `<div class="notes-title">📋 今 日 注 意</div>` +
+    notes.map(n => `
+      <div class="note-item">
+        <span class="note-tag">[${n.tag}]</span>
+        <span>${n.text}</span>
+      </div>
+    `).join('');
+
+  document.getElementById('fortuneAdvice').textContent = '💡 ' + pickRandom(rng, advicePool);
+
+  const num = String(Math.floor(rng() * 100) + 1).padStart(3, '0');
+  document.getElementById('fortuneNumber').textContent = `第 ${num} 签`;
+
+  // 动画
+  setTimeout(() => {
+    document.getElementById('tube').style.transform = 'scale(0.6)';
+    document.getElementById('tube').style.opacity = '0.2';
+  }, 100);
+
+  setTimeout(() => {
+    document.getElementById('fortuneCard').classList.add('show');
+    // 滚动到签纸位置
+    document.getElementById('fortuneCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 400);
+
+  setTimeout(() => {
+    document.getElementById('retryBtn').classList.add('show');
+  }, 1000);
+}
+
+function reset() {
+  drawn = false;
+  shakeCount = 0;
+  const tube = document.getElementById('tube');
+  tube.style.transform = '';
+  tube.style.opacity = '';
+  document.getElementById('fortuneCard').classList.remove('show');
+  document.getElementById('retryBtn').classList.remove('show');
+  document.getElementById('tubeHint').style.opacity = '1';
+  // 滚回顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 日期
+(function() {
+  const now = new Date();
+  const months = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  const weekdays = ['日','一','二','三','四','五','六'];
+  document.getElementById('dateDisplay').textContent =
+    `${months[now.getMonth()]}月${now.getDate()}日 · 周${weekdays[now.getDay()]}`;
+})();
+
+// 初始化摇一摇
+initMotion();
+</script>
+
+</body>
+</html>

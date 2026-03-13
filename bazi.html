@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>命理星盘 · 八字运势</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0d0d1a; --card: #141428; --text: #e8e4d9; --dim: #8a8a9a;
+    --gold: #c9a84c; --red: #c4463a; --blue: #4a6fa5; --purple: #7b5ea7;
+    --border: rgba(201,168,76,0.2);
+  }
+  body { font-family: 'Noto Serif SC', serif; background: var(--bg); color: var(--text); min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
+  .page { max-width: 440px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  .header { text-align: center; padding: 30px 0 20px; }
+  .header h1 { font-size: 24px; font-weight: 300; letter-spacing: 8px; color: var(--gold); }
+  .header .sub { font-size: 12px; color: var(--dim); margin-top: 6px; letter-spacing: 3px; }
+
+  /* 输入 */
+  .input-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 20px; margin-bottom: 20px; }
+  .input-section label { display: block; font-size: 12px; color: var(--dim); letter-spacing: 2px; margin-bottom: 8px; margin-top: 16px; }
+  .input-section label:first-child { margin-top: 0; }
+  .input-section input, .input-section select {
+    width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+    font-family: 'Noto Serif SC', serif; font-size: 15px; outline: none; -webkit-appearance: none;
+  }
+  .input-section input:focus, .input-section select:focus { border-color: var(--gold); }
+  .input-section select option { background: #1a1a2e; color: var(--text); }
+
+  .gender-row { display: flex; gap: 12px; }
+  .gender-btn {
+    flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--dim); font-family: 'Noto Serif SC', serif; font-size: 14px;
+    cursor: pointer; transition: all 0.3s; text-align: center;
+  }
+  .gender-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.1); }
+
+  .calc-btn {
+    width: 100%; margin-top: 20px; padding: 14px;
+    background: linear-gradient(135deg, var(--gold), #d4a843); border: none; border-radius: 8px;
+    color: #1a1a2e; font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700;
+    letter-spacing: 6px; cursor: pointer;
+  }
+  .calc-btn:active { transform: scale(0.98); }
+
+  .result-area { display: none; }
+  .result-area.show { display: block; }
+
+  /* 通用卡片 */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 16px; margin-bottom: 16px; }
+  .section-title { font-size: 13px; color: var(--gold); letter-spacing: 4px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* 四柱 */
+  .pillars { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; }
+  .pillar { width: 70px; text-align: center; background: rgba(201,168,76,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 12px 8px; }
+  .pillar .pillar-label { font-size: 11px; color: var(--dim); letter-spacing: 2px; margin-bottom: 8px; }
+  .pillar .tian-gan { font-size: 28px; font-weight: 900; line-height: 1.2; }
+  .pillar .di-zhi { font-size: 28px; font-weight: 900; line-height: 1.2; margin-top: 4px; }
+  .pillar .wx-label { font-size: 10px; margin-top: 6px; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+
+  .wx-wood { color: #4CAF50; } .wx-fire { color: #f44336; } .wx-earth { color: #FF9800; } .wx-metal { color: #E0E0E0; } .wx-water { color: #2196F3; }
+  .wx-bg-wood { background: rgba(76,175,80,0.15); color: #4CAF50; } .wx-bg-fire { background: rgba(244,67,54,0.15); color: #f44336; }
+  .wx-bg-earth { background: rgba(255,152,0,0.15); color: #FF9800; } .wx-bg-metal { background: rgba(224,224,224,0.15); color: #E0E0E0; }
+  .wx-bg-water { background: rgba(33,150,243,0.15); color: #2196F3; }
+
+  .wuxing-stats { display: flex; justify-content: center; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .wx-stat { text-align: center; }
+  .wx-stat .wx-char { font-size: 18px; font-weight: 700; }
+  .wx-stat .wx-count { font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .wx-stat .wx-bar { width: 36px; height: 4px; border-radius: 2px; margin-top: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .wx-stat .wx-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s; }
+
+  /* 星座 */
+  .zodiac-info { display: flex; align-items: center; gap: 16px; }
+  .zodiac-symbol { width: 64px; height: 64px; border-radius: 50%; background: rgba(201,168,76,0.1); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+  .zodiac-text h3 { font-size: 20px; font-weight: 700; }
+  .zodiac-text .zodiac-date { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .zodiac-text .zodiac-element { font-size: 12px; color: var(--gold); margin-top: 4px; }
+  .zodiac-traits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .trait-tag { padding: 4px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; font-size: 11px; color: var(--dim); }
+
+  /* 运势条 */
+  .fortune-period { font-size: 12px; color: var(--dim); text-align: center; margin-bottom: 16px; letter-spacing: 2px; }
+  .fortune-meter { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .meter-label { font-size: 13px; color: var(--dim); min-width: 36px; text-align: right; }
+  .meter-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .meter-fill { height: 100%; border-radius: 4px; transition: width 1s ease-out; }
+  .meter-fill.good { background: linear-gradient(90deg, #4CAF50, #81C784); }
+  .meter-fill.mid { background: linear-gradient(90deg, #FF9800, #FFB74D); }
+  .meter-fill.low { background: linear-gradient(90deg, #f44336, #ef5350); }
+  .meter-value { font-size: 13px; color: var(--text); min-width: 30px; font-weight: 700; }
+
+  .fortune-reading { margin-top: 20px; padding: 16px; background: rgba(201,168,76,0.05); border-radius: 8px; border-left: 3px solid var(--gold); }
+  .reading-category { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 6px; margin-top: 14px; }
+  .reading-category:first-child { margin-top: 0; }
+  .reading-text { font-size: 13px; line-height: 1.8; color: rgba(232,228,217,0.8); }
+  .summary-text { font-size: 13px; line-height: 2; color: rgba(232,228,217,0.8); }
+
+  /* 大运流年 */
+  .dayun-timeline { overflow-x: auto; padding-bottom: 12px; -webkit-overflow-scrolling: touch; }
+  .dayun-row { display: flex; gap: 8px; min-width: max-content; padding: 4px 0; }
+  .dayun-item {
+    min-width: 64px; text-align: center; padding: 10px 8px; border-radius: 8px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border); flex-shrink: 0;
+    transition: all 0.3s; cursor: default;
+  }
+  .dayun-item.current { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+  .dayun-item .dy-age { font-size: 10px; color: var(--dim); }
+  .dayun-item .dy-gz { font-size: 18px; font-weight: 700; margin: 4px 0; }
+  .dayun-item .dy-wx { font-size: 10px; }
+  .dayun-item .dy-years { font-size: 9px; color: var(--dim); margin-top: 2px; }
+
+  .liunian-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 16px; }
+  .liunian-item {
+    text-align: center; padding: 8px 4px; border-radius: 6px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  }
+  .liunian-item.current { border-color: var(--gold); background: rgba(201,168,76,0.08); }
+  .liunian-item .ln-year { font-size: 10px; color: var(--dim); }
+  .liunian-item .ln-gz { font-size: 14px; font-weight: 700; margin: 2px 0; }
+  .liunian-item .ln-score { font-size: 10px; padding: 1px 6px; border-radius: 10px; display: inline-block; }
+
+  .life-overview { font-size: 13px; line-height: 2; color: rgba(232,228,217,0.8); margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  /* 对话框 */
+  .chat-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .chat-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .chat-header .ch-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(201,168,76,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .chat-header .ch-name { font-size: 14px; font-weight: 700; color: var(--gold); }
+  .chat-header .ch-desc { font-size: 11px; color: var(--dim); }
+
+  .chat-messages { max-height: 400px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.7; }
+  .chat-msg.bot { align-self: flex-start; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); color: var(--text); border-bottom-left-radius: 4px; }
+  .chat-msg.user { align-self: flex-end; background: rgba(74,111,165,0.2); border: 1px solid rgba(74,111,165,0.3); color: var(--text); border-bottom-right-radius: 4px; }
+  .chat-msg.loading { color: var(--dim); font-style: italic; }
+  .chat-msg.bot .msg-text { white-space: pre-wrap; }
+
+  .chat-input-row { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
+  .chat-input {
+    flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 20px; color: var(--text); font-family: 'Noto Serif SC', serif; font-size: 14px; outline: none;
+  }
+  .chat-input:focus { border-color: var(--gold); }
+  .chat-input::placeholder { color: rgba(255,255,255,0.2); }
+  .chat-send {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--gold); border: none;
+    color: #1a1a2e; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .chat-send:disabled { opacity: 0.4; }
+
+  .quick-questions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 12px; }
+  .qq-btn {
+    padding: 5px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; color: var(--dim); font-size: 11px; cursor: pointer;
+    font-family: 'Noto Serif SC', serif; transition: all 0.2s;
+  }
+  .qq-btn:active { background: rgba(201,168,76,0.1); border-color: var(--gold); color: var(--gold); }
+
+  .watermark { text-align: center; padding: 20px 0; font-size: 11px; color: rgba(255,255,255,0.15); letter-spacing: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>命 理 星 盘</h1>
+    <div class="sub">八字 · 大运 · 星座 · 运势</div>
+  </div>
+
+  <div class="input-section">
+    <label>出 生 日 期</label>
+    <input type="date" id="birthDate" value="1998-01-01">
+    <label>出 生 时 辰</label>
+    <select id="birthHour">
+      <option value="-1">不确定</option>
+      <option value="0">子时 (23:00-01:00)</option><option value="1">丑时 (01:00-03:00)</option>
+      <option value="2">寅时 (03:00-05:00)</option><option value="3">卯时 (05:00-07:00)</option>
+      <option value="4">辰时 (07:00-09:00)</option><option value="5">巳时 (09:00-11:00)</option>
+      <option value="6">午时 (11:00-13:00)</option><option value="7">未时 (13:00-15:00)</option>
+      <option value="8">申时 (15:00-17:00)</option><option value="9">酉时 (17:00-19:00)</option>
+      <option value="10">戌时 (19:00-21:00)</option><option value="11">亥时 (21:00-23:00)</option>
+    </select>
+    <label>性 别</label>
+    <div class="gender-row">
+      <div class="gender-btn active" onclick="setGender(this,'F')">♀ 女</div>
+      <div class="gender-btn" onclick="setGender(this,'M')">♂ 男</div>
+    </div>
+    <button class="calc-btn" onclick="calculate()">排 盘 解 读</button>
+  </div>
+
+  <div class="result-area" id="resultArea">
+    <div class="card" id="baziCard">
+      <div class="section-title">四 柱 八 字</div>
+      <div class="pillars" id="pillars"></div>
+      <div class="wuxing-stats" id="wuxingStats"></div>
+    </div>
+
+    <div class="card"><div class="section-title">星 座 信 息</div><div class="zodiac-info" id="zodiacInfo"></div><div class="zodiac-traits" id="zodiacTraits"></div></div>
+
+    <div class="card"><div class="section-title">命 理 小 结</div><div class="summary-text" id="summaryText"></div></div>
+
+    <div class="card">
+      <div class="section-title">大 运 流 年</div>
+      <div style="font-size:11px;color:var(--dim);margin-bottom:12px">← 左右滑动查看大运 →</div>
+      <div class="dayun-timeline"><div class="dayun-row" id="dayunRow"></div></div>
+      <div style="font-size:12px;color:var(--gold);margin-top:20px;letter-spacing:2px">近 十 年 流 年</div>
+      <div class="liunian-grid" id="liunianGrid"></div>
+      <div class="life-overview" id="lifeOverview"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">近 期 运 势</div>
+      <div class="fortune-period" id="fortunePeriod"></div>
+      <div id="fortuneMeters"></div>
+      <div class="fortune-reading" id="fortuneReading"></div>
+    </div>
+
+    <div class="chat-section" id="chatSection">
+      <div class="chat-header">
+        <div class="ch-avatar">🔮</div>
+        <div><div class="ch-name">玄机先生</div><div class="ch-desc">有什么命理问题，尽管问我</div></div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg bot"><span class="msg-text">缘主，我已看过你的命盘。有什么想了解的，关于八字、运势、感情、事业，随时可以问我。</span></div>
+      </div>
+      <div class="quick-questions" id="quickQuestions">
+        <div class="qq-btn" onclick="askQuick(this)">我的命格好不好？</div>
+        <div class="qq-btn" onclick="askQuick(this)">今年感情运怎样？</div>
+        <div class="qq-btn" onclick="askQuick(this)">五行缺什么怎么补？</div>
+        <div class="qq-btn" onclick="askQuick(this)">适合什么工作方向？</div>
+        <div class="qq-btn" onclick="askQuick(this)">什么时候财运最旺？</div>
+        <div class="qq-btn" onclick="askQuick(this)">我的大运解读</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" placeholder="输入你的问题..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" id="chatSend" onclick="sendChat()">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">Atom ⚛️ 出品 · 仅供娱乐</div>
+</div>
+
+<script>
+const TG = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const DZ = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const SX = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+const TG_WX = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+const DZ_WX = {子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
+const WX_C = {木:'wx-wood',火:'wx-fire',土:'wx-earth',金:'wx-metal',水:'wx-water'};
+const WX_BG = {木:'wx-bg-wood',火:'wx-bg-fire',土:'wx-bg-earth',金:'wx-bg-metal',水:'wx-bg-water'};
+const WX_BAR = {木:'#4CAF50',火:'#f44336',土:'#FF9800',金:'#E0E0E0',水:'#2196F3'};
+
+const ZODIACS = [
+  {name:'摩羯座',symbol:'♑',start:[1,1],end:[1,19],element:'土象星座',ruler:'土星',traits:['踏实稳重','有责任心','目标明确','略显固执','内心柔软'],dates:'12.22-1.19'},
+  {name:'水瓶座',symbol:'♒',start:[1,20],end:[2,18],element:'风象星座',ruler:'天王星',traits:['独立创新','思维超前','人道主义','特立独行','重视自由'],dates:'1.20-2.18'},
+  {name:'双鱼座',symbol:'♓',start:[2,19],end:[3,20],element:'水象星座',ruler:'海王星',traits:['浪漫多情','直觉敏锐','富同理心','爱幻想','艺术天赋'],dates:'2.19-3.20'},
+  {name:'白羊座',symbol:'♈',start:[3,21],end:[4,19],element:'火象星座',ruler:'火星',traits:['热情冲动','勇于挑战','行动力强','直来直去','天生领袖'],dates:'3.21-4.19'},
+  {name:'金牛座',symbol:'♉',start:[4,20],end:[5,20],element:'土象星座',ruler:'金星',traits:['务实可靠','审美在线','重视安全','享受生活','慢热长情'],dates:'4.20-5.20'},
+  {name:'双子座',symbol:'♊',start:[5,21],end:[6,21],element:'风象星座',ruler:'水星',traits:['聪明机敏','善于沟通','好奇心强','多才多艺','变化无常'],dates:'5.21-6.21'},
+  {name:'巨蟹座',symbol:'♋',start:[6,22],end:[7,22],element:'水象星座',ruler:'月亮',traits:['温柔体贴','重视家庭','情感丰富','记忆力好','缺安全感'],dates:'6.22-7.22'},
+  {name:'狮子座',symbol:'♌',start:[7,23],end:[8,22],element:'火象星座',ruler:'太阳',traits:['自信大方','慷慨热情','天生王者','爱面子','忠诚可靠'],dates:'7.23-8.22'},
+  {name:'处女座',symbol:'♍',start:[8,23],end:[9,22],element:'土象星座',ruler:'水星',traits:['追求完美','细致入微','务实勤勉','略有洁癖','分析力强'],dates:'8.23-9.22'},
+  {name:'天秤座',symbol:'♎',start:[9,23],end:[10,23],element:'风象星座',ruler:'金星',traits:['优雅和谐','善于社交','审美极高','犹豫不决','追求公平'],dates:'9.23-10.23'},
+  {name:'天蝎座',symbol:'♏',start:[10,24],end:[11,22],element:'水象星座',ruler:'冥王星',traits:['深邃神秘','意志坚定','洞察力强','占有欲强','爱恨分明'],dates:'10.24-11.22'},
+  {name:'射手座',symbol:'♐',start:[11,23],end:[12,21],element:'火象星座',ruler:'木星',traits:['乐观开朗','热爱自由','哲学思考','粗心大意','冒险精神'],dates:'11.23-12.21'},
+  {name:'摩羯座',symbol:'♑',start:[12,22],end:[12,31],element:'土象星座',ruler:'土星',traits:['踏实稳重','有责任心','目标明确','略显固执','内心柔软'],dates:'12.22-1.19'},
+];
+
+let gender = 'F', baziContext = '', chatHistory = [];
+
+function setGender(el, g) {
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active'); gender = g;
+}
+
+function getYearP(y) { return { tg: TG[(y-4)%10], dz: DZ[(y-4)%12] }; }
+function getMonthP(y, m) {
+  const dz = DZ[(m+1)%12];
+  const base = [2,4,6,8,0,2,4,6,8,0][(y-4)%10];
+  return { tg: TG[(base+m-1)%10], dz };
+}
+function getDayP(y, m, d) {
+  const diff = Math.floor((new Date(y,m-1,d) - new Date(1900,0,1)) / 86400000);
+  const gz = (diff + 10) % 60;
+  return { tg: TG[((gz%10)+10)%10], dz: DZ[((gz%12)+12)%12] };
+}
+function getHourP(dayTG, hi) {
+  if (hi < 0) return null;
+  const base = [0,2,4,6,8,0,2,4,6,8][TG.indexOf(dayTG)];
+  return { tg: TG[(base+hi)%10], dz: DZ[hi] };
+}
+function getZodiac(m, d) {
+  for (const z of ZODIACS) { const [sm,sd]=z.start,[em,ed]=z.end; if(sm===em){if(m===sm&&d>=sd&&d<=ed)return z;}else{if((m===sm&&d>=sd)||(m===em&&d<=ed))return z;} } return ZODIACS[0];
+}
+function countWX(ps) { const c={木:0,火:0,土:0,金:0,水:0}; ps.forEach(p=>{if(p){c[TG_WX[p.tg]]++;c[DZ_WX[p.dz]]++;}}); return c; }
+function rng(seed) { let s=Math.abs(seed)||1; return ()=>{ s=(s*16807)%2147483647; return(s-1)/2147483646; }; }
+function pick(r, a) { return a[Math.floor(r()*a.length)]; }
+
+// ===== 大运计算 =====
+function calcDayun(yearTG, monthDZIndex, birthYear, birthMonth, birthDay, gen) {
+  const yearTGIndex = TG.indexOf(yearTG);
+  const isYang = yearTGIndex % 2 === 0;
+  const forward = (isYang && gen === 'M') || (!isYang && gen === 'F');
+
+  // 起运年龄（简化：用3的倍数近似）
+  const startAge = 1 + Math.floor(Math.random() * 3) * 2 + 1; // 简化为固定值
+  // 更准确的简化：根据出生月份近似
+  const approxStartAge = Math.max(1, Math.min(9, Math.round((forward ? (13 - birthMonth) : birthMonth) / 1.5)));
+
+  const dayunList = [];
+  const monthGZBase = (yearTGIndex % 5) * 2 + 2; // 月柱天干起始
+
+  for (let i = 0; i < 8; i++) {
+    const step = forward ? i + 1 : -(i + 1);
+    const dzIdx = ((monthDZIndex + step) % 12 + 12) % 12;
+    const tgIdx = ((monthGZBase + birthMonth - 1 + step) % 10 + 10) % 10;
+    const age = approxStartAge + i * 10;
+    const startYear = birthYear + age;
+    dayunList.push({
+      tg: TG[tgIdx], dz: DZ[dzIdx],
+      startAge: age, endAge: age + 9,
+      startYear, endYear: startYear + 9
+    });
+  }
+  return dayunList;
+}
+
+// ===== 流年 =====
+function getLiunian(currentYear) {
+  const years = [];
+  for (let y = currentYear - 2; y <= currentYear + 7; y++) {
+    const tg = TG[(y-4)%10];
+    const dz = DZ[(y-4)%12];
+    years.push({ year: y, tg, dz, sx: SX[(y-4)%12] });
+  }
+  return years;
+}
+
+// ===== 运势评分 =====
+function scoreRelation(masterWX, targetWX) {
+  const rels = {木:{生:'火',克:'土',被生:'水',被克:'金'},火:{生:'土',克:'金',被生:'木',被克:'水'},土:{生:'金',克:'水',被生:'火',被克:'木'},金:{生:'水',克:'木',被生:'土',被克:'火'},水:{生:'木',克:'火',被生:'金',被克:'土'}};
+  const r = rels[masterWX];
+  if (targetWX === masterWX) return 8;
+  if (targetWX === r.被生) return 9;
+  if (targetWX === r.生) return 6;
+  if (targetWX === r.克) return 5;
+  if (targetWX === r.被克) return 3;
+  return 5;
+}
+
+function generateFortune(pillars, zodiac, wxCount, gen) {
+  const now = new Date();
+  const todayP = getDayP(now.getFullYear(), now.getMonth()+1, now.getDate());
+  const masterWX = TG_WX[pillars[2].tg];
+  const dayWX = TG_WX[todayP.tg];
+  const seed = pillars[0].tg.charCodeAt(0)*10000+pillars[2].tg.charCodeAt(0)*100+now.getFullYear()*100+now.getMonth()*10+Math.floor(now.getDate()/7);
+  const r = rng(seed);
+  let base = 60 + scoreRelation(masterWX, dayWX) * 3;
+  const sc = k => Math.min(95,Math.max(25, base + Math.floor(r()*24-12)));
+  const scores = { overall:sc(), love:sc(), career:sc(), wealth:sc(), health:sc() };
+  const tier = s => s>=70?'high':(s>=50?'mid':'low');
+
+  const texts = {
+    overall: {
+      high:[`日主属${masterWX}，近期得${dayWX}气相助，整体运势上扬。适合积极推进计划，贵人运旺。`,`本周${masterWX}气得令，运势平稳向好，稳中求进会有收获。`,`近期天时地利兼备，${zodiac.name}的${zodiac.traits[0]}特质被放大，做事容易得到认可。`],
+      mid:[`日主属${masterWX}，运势平稳，无大波动。适合处理日常事务，不宜冒进。`,`本周中规中矩，${zodiac.name}的${zodiac.traits[2]}可以发挥，注意控制节奏。`,`近期${masterWX}气偏弱，养精蓄锐为上，耐心是最好的策略。`],
+      low:[`日主属${masterWX}，近期受${dayWX}气冲克，运势有波动。凡事多留余地。`,`本周宜守不宜攻，三思后行，避免冲动决策。`,`运势偏低，但正是沉淀反思的好时机，静待转机。`]
+    },
+    love: {
+      high:[`桃花运旺，${gen==='F'?'可能有人暗生好感':'魅力在线'}。已有伴感情升温。`,`感情有甜蜜互动，单身在社交场合容易遇到有缘人。`],
+      mid:[`感情平稳，适合做温馨的日常小事，如一起散步做饭。`,`桃花运一般，不用刻意，专注自己吸引力自然来。`],
+      low:[`感情方面容易误会，注意措辞，避免翻旧账。`,`不宜在感情上做重大决定，冷静几天再处理。`]
+    },
+    career: {
+      high:[`工作状态在线，适合推进重要项目，上级认可度高。`,`事业运上升，团队合作顺利，可能收到正向反馈。`],
+      mid:[`工作按部就班即可，专注手头最重要的一两件事。`,`学习积累的好时期，趁机补短板、理思路。`],
+      low:[`工作中可能遇到小阻碍，保持耐心，别在情绪不好时做决策。`,`压力偏大，注意劳逸结合，适当寻求帮助。`]
+    },
+    wealth: {
+      high:[`财运不错，正财稳定，可能有小额意外收入。`,`进账顺利，适合做预算规划或调整理财策略。`],
+      mid:[`收支平衡，不适合大额消费或高风险投资。`,`正财尚可偏财一般，购物前多比价。`],
+      low:[`容易有计划外支出，管好钱包，非必要消费延后。`,`破财风险偏高，检查自动扣费，大笔支出先按住。`]
+    },
+    health: {
+      high:[`身体状态不错，适合运动或尝试新健身方式。`,`健康运良好，但别透支，规律作息是最好的养生。`],
+      mid:[`注意别久坐，每隔一小时活动一下，多喝水。`,`适合吃清淡一些，给肠胃减负。`],
+      low:[`容易疲劳或有小毛病，早睡早起别硬撑。`,`身体在发信号别忽略，不舒服就去看看。`]
+    }
+  };
+
+  const readings = {};
+  for (const k of ['overall','love','career','wealth','health']) {
+    readings[k] = pick(r, texts[k][tier(scores[k])]);
+  }
+  return { scores, readings };
+}
+
+function generateSummary(ps, wxC, zodiac, sx, gen) {
+  const dm = ps[2].tg, dmWX = TG_WX[dm];
+  const missing = Object.entries(wxC).filter(([,v])=>v===0).map(([k])=>k);
+  const strongest = Object.entries(wxC).sort((a,b)=>b[1]-a[1])[0];
+  const补 = {木:'多接触绿色、植物，东方为吉',火:'多晒太阳，红色系为吉',土:'脚踏实地，黄色为吉',金:'佩戴金属饰品，白色为吉',水:'多饮水，黑蓝色为吉'};
+  const wxT = {木:'性格中有向上生长的力量，适合创造性工作，但需注意不要过于固执',火:'内心热情明亮，行动力强，但要学会控制节奏',土:'为人厚道踏实，值得信赖，但有时需要更果断',金:'做事干脆利落，有原则，但也要学会适时变通',水:'聪明灵活善于变通，但要注意集中精力'};
+
+  let s = `日主「${dm}${ps[2].dz}」，五行属${dmWX}。生肖属${sx}，${zodiac.name}。\n\n`;
+  s += `八字中${strongest[0]}气最旺（${strongest[1]}个），`;
+  if (missing.length) { s += `缺${missing.join('、')}。${missing.map(m=>补[m]).join('；')}。\n\n`; }
+  else { s += `五行俱全，根基稳固。\n\n`; }
+  s += `${zodiac.name}赋予了${zodiac.traits[0]}和${zodiac.traits[2]}的特质，结合${dmWX}日主能量，${wxT[dmWX]}。`;
+  return s;
+}
+
+function generateLifeOverview(pillars, dayunList, wxCount, zodiac, gen) {
+  const dmWX = TG_WX[pillars[2].tg];
+  const phases = ['少年运（0-20岁）','青年运（20-40岁）','中年运（40-60岁）','晚年运（60岁后）'];
+  const phaseTexts = {
+    木: ['求学阶段适合文学艺术方向，性格中的韧性帮助你度过成长期的挑战。','事业发展期，创造力是你最大的武器。适合自主创业或从事需要创新的行业。','中年后趋于稳定，注意肝胆健康。积累的人脉和经验开始发挥作用。','晚年宜养花种草，亲近自然。子女缘较好，享天伦之乐。'],
+    火: ['少年时期活泼好动，学习能力强但需要引导专注。适合体育、表演类发展。','青年时期事业心强，容易出头。但要控制脾气，贵人运取决于人际关系。','中年是收获期，领导力逐渐显现。注意心血管健康。','晚年热情不减，适合社区活动或公益。保持运动习惯很重要。'],
+    土: ['少年稳重，学业踏实。虽然不是最出挑的，但根基打得牢。','青年时期厚积薄发，30岁后开始发力。适合房产、建筑、农业相关行业。','中年是最稳定的时期，事业和家庭都趋于完善。注意脾胃健康。','晚年安稳有余，适合田园生活。福报深厚，是家族的定海神针。'],
+    金: ['少年性格果断，有领导力。学业上适合理工科方向。','青年时期事业上升快，做事有魄力。适合金融、法律、管理类行业。','中年后需学会柔软处事，过刚则折。注意呼吸系统健康。','晚年宜修身养性，金石书画是很好的寄托。'],
+    水: ['少年聪慧过人，学习能力强，但兴趣广泛需要聚焦。','青年时期机遇多变化也多，适应力是你的优势。适合科技、传媒、贸易行业。','中年后逐渐稳定，前半生的积累开始变现。注意肾脏和泌尿系统健康。','晚年智慧通达，适合顾问或教育类角色。子孙运看命盘具体配置。'],
+  };
+
+  let text = `\n【一生运势概览】\n\n`;
+  phaseTexts[dmWX].forEach((t, i) => {
+    text += `▸ ${phases[i]}\n${t}\n\n`;
+  });
+
+  text += `【关键转折年份】\n`;
+  const r = rng(pillars[0].tg.charCodeAt(0) * 100 + pillars[2].dz.charCodeAt(0));
+  dayunList.slice(0, 6).forEach(dy => {
+    const midYear = dy.startYear + 4 + Math.floor(r() * 3);
+    const events = ['事业有重大机遇','感情生活出现转折','财运有明显变化','贵人出现助力前行','适合搬迁或转换方向','健康需要特别关注'];
+    text += `▸ ${midYear}年前后：${pick(r, events)}\n`;
+  });
+
+  return text;
+}
+
+// ===== 主计算 =====
+function calculate() {
+  const dv = document.getElementById('birthDate').value;
+  const hv = parseInt(document.getElementById('birthHour').value);
+  if (!dv) return alert('请选择出生日期');
+  const [Y,M,D] = dv.split('-').map(Number);
+
+  const yP=getYearP(Y), mP=getMonthP(Y,M), dP=getDayP(Y,M,D), hP=getHourP(dP.tg,hv);
+  const pillars=[yP,mP,dP,hP], labels=['年柱','月柱','日柱','时柱'];
+  const zodiac=getZodiac(M,D), sx=SX[(Y-4)%12], wxC=countWX(pillars.filter(p=>p));
+
+  // 四柱渲染
+  document.getElementById('pillars').innerHTML = pillars.map((p,i) => {
+    if(!p) return `<div class="pillar"><div class="pillar-label">${labels[i]}</div><div class="tian-gan" style="color:var(--dim)">?</div><div class="di-zhi" style="color:var(--dim)">?</div><div class="wx-label" style="color:var(--dim)">未知</div></div>`;
+    return `<div class="pillar"><div class="pillar-label">${labels[i]}</div><div class="tian-gan ${WX_C[TG_WX[p.tg]]}">${p.tg}</div><div class="di-zhi ${WX_C[DZ_WX[p.dz]]}">${p.dz}</div><div class="wx-label ${WX_BG[TG_WX[p.tg]]}">${TG_WX[p.tg]}${DZ_WX[p.dz]}</div></div>`;
+  }).join('');
+
+  const mx=Math.max(...Object.values(wxC),1);
+  document.getElementById('wuxingStats').innerHTML = ['木','火','土','金','水'].map(w=>`<div class="wx-stat"><div class="wx-char ${WX_C[w]}">${w}</div><div class="wx-count">${wxC[w]}个</div><div class="wx-bar"><div class="wx-bar-fill" style="width:${(wxC[w]/mx)*100}%;background:${WX_BAR[w]}"></div></div></div>`).join('');
+
+  // 星座
+  document.getElementById('zodiacInfo').innerHTML = `<div class="zodiac-symbol">${zodiac.symbol}</div><div class="zodiac-text"><h3>${zodiac.name}</h3><div class="zodiac-date">${zodiac.dates} · 属${sx}</div><div class="zodiac-element">${zodiac.element} · 守护星 ${zodiac.ruler}</div></div>`;
+  document.getElementById('zodiacTraits').innerHTML = zodiac.traits.map(t=>`<span class="trait-tag">${t}</span>`).join('');
+
+  // 命理小结
+  document.getElementById('summaryText').textContent = generateSummary(pillars,wxC,zodiac,sx,gender);
+
+  // 大运
+  const mDZIdx = DZ.indexOf(mP.dz);
+  const dayunList = calcDayun(yP.tg, mDZIdx, Y, M, D, gender);
+  const now = new Date();
+  const currentAge = now.getFullYear() - Y;
+
+  document.getElementById('dayunRow').innerHTML = dayunList.map(dy => {
+    const isCurrent = currentAge >= dy.startAge && currentAge <= dy.endAge;
+    const tgWX = TG_WX[dy.tg], dzWX = DZ_WX[dy.dz];
+    return `<div class="dayun-item ${isCurrent?'current':''}"><div class="dy-age">${dy.startAge}-${dy.endAge}岁</div><div class="dy-gz"><span class="${WX_C[tgWX]}">${dy.tg}</span><span class="${WX_C[dzWX]}">${dy.dz}</span></div><div class="dy-wx ${WX_BG[tgWX]}" style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px">${tgWX}${dzWX}</div><div class="dy-years">${dy.startYear}-${dy.endYear}</div></div>`;
+  }).join('');
+
+  // 流年
+  const liunian = getLiunian(now.getFullYear());
+  const dmWX = TG_WX[dP.tg];
+  document.getElementById('liunianGrid').innerHTML = liunian.map(ln => {
+    const isCurrent = ln.year === now.getFullYear();
+    const lnWX = TG_WX[ln.tg];
+    const sc = scoreRelation(dmWX, lnWX);
+    const scLabel = sc >= 8 ? '旺' : (sc >= 6 ? '平' : (sc >= 4 ? '弱' : '凶'));
+    const scColor = sc >= 8 ? 'wx-bg-wood' : (sc >= 6 ? 'wx-bg-earth' : (sc >= 4 ? 'wx-bg-water' : 'wx-bg-fire'));
+    return `<div class="liunian-item ${isCurrent?'current':''}"><div class="ln-year">${ln.year} ${ln.sx}年</div><div class="ln-gz"><span class="${WX_C[TG_WX[ln.tg]]}">${ln.tg}</span><span class="${WX_C[DZ_WX[ln.dz]]}">${ln.dz}</span></div><div class="ln-score ${scColor}">${scLabel}</div></div>`;
+  }).join('');
+
+  // 一生运势
+  document.getElementById('lifeOverview').innerHTML = generateLifeOverview(pillars, dayunList, wxC, zodiac, gender).replace(/\n/g, '<br>');
+
+  // 近期运势
+  const fortune = generateFortune(pillars, zodiac, wxC, gender);
+  const weekEnd = new Date(now); weekEnd.setDate(weekEnd.getDate()+(7-weekEnd.getDay()));
+  document.getElementById('fortunePeriod').textContent = `${now.getMonth()+1}月${now.getDate()}日 — ${weekEnd.getMonth()+1}月${weekEnd.getDate()}日`;
+
+  const mLabels = [{key:'overall',label:'综合'},{key:'love',label:'感情'},{key:'career',label:'事业'},{key:'wealth',label:'财运'},{key:'health',label:'健康'}];
+  document.getElementById('fortuneMeters').innerHTML = mLabels.map(m=>{
+    const s=fortune.scores[m.key], cls=s>=70?'good':(s>=50?'mid':'low');
+    return `<div class="fortune-meter"><span class="meter-label">${m.label}</span><div class="meter-bar"><div class="meter-fill ${cls}" style="width:0%"></div></div><span class="meter-value">${s}</span></div>`;
+  }).join('');
+  setTimeout(()=>{ document.querySelectorAll('.meter-fill').forEach((el,i)=>{ el.style.width=fortune.scores[mLabels[i].key]+'%'; }); },200);
+
+  const rLabels = {overall:'📌 总运',love:'💕 感情',career:'💼 事业',wealth:'💰 财运',health:'🏥 健康'};
+  document.getElementById('fortuneReading').innerHTML = Object.entries(fortune.readings).map(([k,t])=>`<div class="reading-category">${rLabels[k]}</div><div class="reading-text">${t}</div>`).join('');
+
+  // 构建对话上下文
+  baziContext = `性别：${gender==='F'?'女':'男'}
+出生日期：${Y}年${M}月${D}日
+生肖：${sx} | 星座：${zodiac.name}（${zodiac.element}）
+四柱八字：${pillars.map((p,i)=>p?`${labels[i]}${p.tg}${p.dz}(${TG_WX[p.tg]}${DZ_WX[p.dz]})`:labels[i]+'未知').join(' | ')}
+日主：${dP.tg}（${dmWX}）
+五行统计：${Object.entries(wxC).map(([k,v])=>`${k}${v}个`).join(' ')}
+五行缺：${Object.entries(wxC).filter(([,v])=>v===0).map(([k])=>k).join('、') || '无（五行俱全）'}
+当前大运：${dayunList.find(d=>currentAge>=d.startAge&&currentAge<=d.endAge)?.tg||''}${dayunList.find(d=>currentAge>=d.startAge&&currentAge<=d.endAge)?.dz||''}
+今年流年：${getYearP(now.getFullYear()).tg}${getYearP(now.getFullYear()).dz}（${SX[(now.getFullYear()-4)%12]}年）`;
+
+  chatHistory = [];
+  document.getElementById('chatMessages').innerHTML = '<div class="chat-msg bot"><span class="msg-text">缘主，我已看过你的命盘。有什么想了解的，关于八字、大运、感情、事业，随时可以问我。</span></div>';
+
+  document.getElementById('resultArea').classList.add('show');
+  setTimeout(()=>document.getElementById('resultArea').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+// ===== 对话功能 =====
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+  msgs.innerHTML += `<div class="chat-msg bot loading" id="loadingMsg">思考中...</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  document.getElementById('chatSend').disabled = true;
+  chatHistory.push({ role: 'user', content: msg });
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: chatHistory, baziContext })
+    });
+    const data = await resp.json();
+    const reply = data.reply || data.error || '抱歉，暂时无法回答。';
+
+    document.getElementById('loadingMsg').remove();
+    msgs.innerHTML += `<div class="chat-msg bot"><span class="msg-text">${reply}</span></div>`;
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch (e) {
+    document.getElementById('loadingMsg').remove();
+    msgs.innerHTML += `<div class="chat-msg bot"><span class="msg-text">网络似乎出了点问题，请稍后再试。</span></div>`;
+  }
+
+  document.getElementById('chatSend').disabled = false;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function askQuick(el) { document.getElementById('chatInput').value = el.textContent; sendChat(); }
+</script>
+</body>
+</html>
