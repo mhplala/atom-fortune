@@ -1,0 +1,38 @@
+[
+  {
+    "word": "elaborate",
+    "addedDate": "2026-04-08",
+    "phonetic": {
+      "uk": "/ɪˈlæbərət/",
+      "us": "/ɪˈlæbərət/",
+      "verbUk": "/ɪˈlæbəreɪt/",
+      "verbUs": "/ɪˈlæbəreɪt/"
+    },
+    "partOfSpeech": ["adjective", "verb"],
+    "meanings": [
+      "adj. 精心制作的，复杂详尽的",
+      "v. 详细说明，展开阐述"
+    ],
+    "phrases": [
+      "elaborate plan",
+      "elaborate design",
+      "elaborate explanation",
+      "elaborate on something"
+    ],
+    "examples": [
+      {
+        "en": "She gave an elaborate explanation of how the system works.",
+        "zh": "她详细解释了这个系统是如何运行的。"
+      },
+      {
+        "en": "The palace was decorated in an elaborate style.",
+        "zh": "这座宫殿装饰得非常精美繁复。"
+      },
+      {
+        "en": "Could you elaborate on your idea a little more?",
+        "zh": "你能再详细讲讲你的想法吗？"
+      }
+    ],
+    "note": "elaborate on 很常用，意思是“展开说说”。"
+  }
+]
